@@ -412,7 +412,143 @@ elif page == "Settings":
     - To improve PubMed throughput, consider adding an NCBI API key in deployment environment variables.
     - If you need export to PDF or additional presentation-quality graphics, ask and I will add it.
     """)
+# ======================================================================
+# PREMIUM STYLE + LAYOUT CORRECTION PATCH
+# This block enhances your entire application globally.
+# ======================================================================
+
+def apply_premium_style():
+    st.markdown(
+        """
+        <style>
+
+        /* -------------------------
+           GLOBAL PREMIUM TYPOGRAPHY
+        --------------------------*/
+        html, body, [class*="css"] {
+            font-family: "Times New Roman", serif !important;
+            color: #1f1f1f !important;
+            font-size: 18px !important;
+            line-height: 1.55 !important;
+        }
+
+        /* Soft academic background */
+        .stApp {
+            background-color: #fff7fb !important;  /* soft pink tint */
+        }
+
+        /* Spacing for text readability */
+        p, li {
+            margin-bottom: 10px !important;
+        }
+
+        /* -------------------------
+           HOME PAGE TITLE FIX
+        --------------------------*/
+        .main-title {
+            font-size: 42px !important;
+            font-weight: bold !important;
+            text-align: center !important;
+            letter-spacing: 1px !important;
+            color: #222 !important;
+            margin-top: 10px !important;
+        }
+
+        .subtitle {
+            font-size: 20px !important;
+            text-align: center !important;
+            color: #444 !important;
+            margin-bottom: 15px !important;
+        }
+
+        /* -------------------------
+           LOGO ALWAYS CENTERED & VISIBLE
+        --------------------------*/
+        .logo-center {
+            display: flex;
+            justify-content: center;
+            margin-top: 5px;
+            margin-bottom: 20px;
+        }
+
+        /* -------------------------
+           CARD STYLE ENHANCED
+        --------------------------*/
+        .card {
+            background: #ffffff !important;
+            border-radius: 14px !important;
+            padding: 22px !important;
+            border: 1px solid rgba(200, 160, 180, 0.35) !important;
+            box-shadow: 0 10px 28px rgba(0,0,0,0.08) !important;
+        }
+
+        /* -------------------------
+           FIGURE ALIGNMENT + CLEAN LAYOUT
+        --------------------------*/
+        .stPlotlyChart, .stPyplot {
+            display: flex !important;
+            justify-content: center !important;
+            padding: 15px 0 !important;
+        }
+
+        .stPlot {
+            text-align: center !important;
+        }
+
+        /* -------------------------
+           SECTION TITLES
+        --------------------------*/
+        h1, h2, h3 {
+            font-family: "Times New Roman", serif !important;
+            font-weight: bold !important;
+            color: #222 !important;
+        }
+
+        </style>
+        """,
+        unsafe_allow_html=True
+    )
+
+# Apply style on every page automatically
+apply_premium_style()
+
+
+# ======================================================================
+# FIXED PREMIUM SVG LOGO (forces showing)
+# ======================================================================
+def premium_logo():
+    svg = """
+    <div class="logo-center">
+    <svg width="165" height="165" viewBox="0 0 200 200">
+      <defs>
+        <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stop-color="#ffdd55"/>
+          <stop offset="100%" stop-color="#d4a017"/>
+        </linearGradient>
+      </defs>
+
+      <!-- honey cell -->
+      <path d="M100 22 L148 52 L148 108 L100 138 L52 108 L52 52 Z"
+            fill="url(#gold)" stroke="#b88c00" stroke-width="5"/>
+
+      <!-- bacteria rods -->
+      <rect x="65" y="70" width="70" height="16" rx="8" fill="#b57900"/>
+      <rect x="60" y="92" width="70" height="16" rx="8" fill="#b57900" transform="rotate(-10 95 100)"/>
+      <rect x="75" y="105" width="70" height="16" rx="8" fill="#b57900" transform="rotate(10 110 115)"/>
+    </svg>
+    </div>
+    """
+    st.markdown(svg, unsafe_allow_html=True)
+
+
+# ======================================================================
+# FORCE LOGO ON HOME PAGE
+# ======================================================================
+if page == "Home":
+    premium_logo()
+
 
 # End of file
+
 
 
