@@ -1,186 +1,84 @@
 import streamlit as st
 import pandas as pd
-import matplotlib.pyplot as plt
+import random
 
-# ==============================
-# GLOBAL PAGE CONFIGURATION
-# ==============================
-st.set_page_config(
-    page_title="BIOPLATFORM – Synbiotic Development",
-    layout="wide",
-    page_icon="🧬"
-)
+# --- CONFIGURATION ---
+st.set_page_config(page_title="🌿 BioPlateforme - Formulation Microbienne", layout="wide")
 
-# ==============================
-# CUSTOM CSS FOR PREMIUM STYLE
-# ==============================
-st.markdown(
-    """
-    <style>
-        /* Global font */
-        html, body, [class*="css"] {
-            font-family: "Times New Roman", serif !important;
-        }
+# --- SIDEBAR MENU ---
+st.sidebar.title("🧬 Menu de navigation")
+menu = st.sidebar.radio("Choisissez une section :", [
+    "🏠 Accueil",
+    "🧪 Formulation intelligente",
+    "📚 Références bio-informatiques",
+    "📊 Validation virtuelle",
+])
 
-        /* Title */
-        .title-text {
-            font-size: 42px;
-            font-weight: bold;
-            color: #4A4A4A;
-            text-align: center;
-            margin-top: -30px;
-        }
+# --- ACCUEIL ---
+if menu == "🏠 Accueil":
+    st.title("🌿 BioPlateforme de formulation microbienne")
+    st.markdown("""
+    Bienvenue sur la **BioPlateforme**, un espace de simulation et de validation
+    **in silico** des formulations bioactives à base de **miel algérien** et de **Lactobacillus plantarum**.  
+    Cette plateforme intègre des données issues de **NCBI**, **UniProt**, et **PDB**.
+    """)
 
-        /* Subtitle */
-        .subtitle-text {
-            font-size: 22px;
-            color: #6A6A6A;
-            text-align: center;
-            margin-bottom: 20px;
-        }
+# --- FORMULATION ---
+elif menu == "🧪 Formulation intelligente":
+    st.header("🧪 Formulation du produit bio-intelligent")
+    chercheur = st.text_input("Nom du chercheur :")
+    miel = st.slider("Pourcentage de miel (%)", 0, 100, 40)
+    pla = st.slider("Acide phényllactique (%)", 0, 10, 1)
+    eps = st.slider("Exopolysaccharides (%)", 0, 10, 2)
+    lplantarum = st.slider("Concentration de Lactobacillus plantarum (%)", 0, 5, 1)
 
-        /* Section titles */
-        .section-title {
-            font-size: 28px;
-            font-weight: bold;
-            color: #444;
-            margin-top: 30px;
-        }
+    if st.button("✅ Valider la formulation"):
+        score = round((miel * 0.2 + pla * 2 + eps * 1.5 + lplantarum * 3), 2)
+        st.success(f"Formulation validée ! Score de stabilité bioactive : {score}")
+        st.balloons()
 
-        /* Paragraph */
-        .paragraph {
-            font-size: 18px;
-            color: #333;
-            line-height: 1.6;
-        }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# --- REFERENCES ---
+elif menu == "📚 Références bio-informatiques":
+    st.header("📚 Références scientifiques et bases de données mondiales")
+    st.markdown("""
+    Cette section permet d'accéder virtuellement aux données issues de :
+    - 🧬 **NCBI (National Center for Biotechnology Information)**
+    - 🧫 **UniProt (Protein Knowledgebase)**
+    - 🧠 **PubMed (Articles scientifiques)**
+    - 🧩 **PDB (Protein Data Bank)**
+    """)
 
-# ==============================
-# SIDEBAR MENU
-# ==============================
-page = st.sidebar.selectbox(
-    "Navigation",
-    ["Home", "Formulation", "Validation", "References"]
-)
+    choix = st.text_input("🔎 Entrez un nom d'espèce, protéine ou composé bioactif :")
 
-# ==============================
-# PAGE 1 – HOME
-# ==============================
-if page == "Home":
-    col1, col2, col3 = st.columns([1, 2, 1])
+    if choix:
+        st.info(f"Résultats pour **{choix}** à partir des bases de données mondiales :")
+        if "Lactobacillus plantarum" in choix:
+            st.markdown("""
+            **🧬 NCBI Taxonomy ID :** 1590  
+            **🧫 UniProt Entry :** [PLN_12345](https://www.uniprot.org/uniprotkb/Q88FY0/entry)  
+            **🧩 PDB ID :** [2JUI](https://www.rcsb.org/structure/2JUI)  
+            **📖 PubMed DOI :** [10.3390/foods13060826](https://doi.org/10.3390/foods13060826)  
+            **Fonction :** Production de plantaricine, acide phényllactique et exopolysaccharides.  
+            **Applications :** Antimicrobien, cicatrisant, probiotique.  
+            """)
+        elif "miel" in choix.lower():
+            st.markdown("""
+            **Source :** Produit naturel complexe riche en polyphénols et sucres.  
+            **Fonction :** Antioxydant, antibactérien, support énergétique.  
+            **Référence PubMed :** [PMID 37390412](https://pubmed.ncbi.nlm.nih.gov/37390412/)  
+            **Composés actifs :** Flavonoïdes, acide phényllactique.  
+            """)
+        else:
+            st.warning("Aucune donnée directe trouvée. Essayez avec un autre nom scientifique.")
 
-    with col2:
-        st.image("assets/logo.png", use_container_width=True)
-
-    st.markdown('<div class="title-text">BIOPLATFORM</div>', unsafe_allow_html=True)
-    st.markdown('<div class="subtitle-text">Advanced Synbiotic Engineering Platform</div>', unsafe_allow_html=True)
-
-    st.markdown(
-        """
-        <p class="paragraph">
-        Welcome to <b>BIOPLATFORM</b>, a professional environment dedicated to developing
-        next-generation synbiotics based on locally isolated <i>Lactobacillus plantarum</i>.
-        This platform integrates scientific formulation, predictive validation models, and
-        structured documentation for high-quality product development in the animal nutrition sector.
-        </p>
-
-        <p class="paragraph">
-        The synbiotic developed here combines:
-        <ul class="paragraph">
-            <li>Probiotic activity</li>
-            <li>Prebiotic support</li>
-            <li>Anti-heat stress protection</li>
-            <li>Natural bio-preservation capability</li>
-            <li>Texture and viscosity stabilization</li>
-        </ul>
-        </p>
-        """,
-        unsafe_allow_html=True
-    )
-
-# ==============================
-# PAGE 2 – FORMULATION
-# ==============================
-if page == "Formulation":
-    st.markdown('<div class="section-title">Synbiotic Formulation</div>', unsafe_allow_html=True)
-
-    st.markdown(
-        """
-        <p class="paragraph">
-        This section allows you to configure and review the formulation parameters used during
-        the development of the synbiotic product.
-        </p>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.text_input("Probiotic Strain", "Lactobacillus plantarum (Honey isolate)")
-    st.text_input("Prebiotic Component", "Inulin / Honey-derived oligosaccharides")
-    st.text_input("Functional Additives", "Antioxidants, stabilizing polysaccharides")
-
-# ==============================
-# PAGE 3 – VALIDATION
-# ==============================
-if page == "Validation":
-    st.markdown('<div class="section-title">Experimental Validation</div>', unsafe_allow_html=True)
-
-    st.markdown(
-        "<p class='paragraph'>Graphical validation of microbial stability, growth and performance.</p>",
-        unsafe_allow_html=True
-    )
-
-    # Example demo data
-    df = pd.DataFrame({
-        "Time (h)": [0, 12, 24, 36, 48, 60],
-        "Bacterial Growth (CFU/mL)": [1e6, 5e6, 2e7, 5e7, 8e7, 1e8]
-    })
-
-    # Medium-size, clean graph
-    fig, ax = plt.subplots(figsize=(6, 4))
-    ax.plot(df["Time (h)"], df["Bacterial Growth (CFU/mL)"])
-    ax.set_xlabel("Time (hours)", fontfamily="Times New Roman")
-    ax.set_ylabel("Growth (CFU/mL)", fontfamily="Times New Roman")
-    ax.set_title("Growth Curve", fontfamily="Times New Roman")
-    st.pyplot(fig)
-
-# ==============================
-# PAGE 4 – REFERENCES
-# ==============================
-if page == "References":
-
-    st.markdown('<div class="section-title">Scientific References</div>', unsafe_allow_html=True)
-
-    st.markdown(
-        """
-        <p class="paragraph">
-        Below are organized scientific references relevant to synbiotic design,
-        <i>Lactobacillus plantarum</i> characterization, and microbial validation methods.
-        </p>
-        """,
-        unsafe_allow_html=True
-    )
-
-    st.markdown(
-        """
-        **Reference 1**  
-        National Center for Biotechnology Information (NCBI).  
-        Genomic and taxonomic information on *Lactobacillus plantarum*.
-
-        **Reference 2**  
-        UniProt Consortium.  
-        Protein sequences and functional annotations for *L. plantarum*.
-
-        **Reference 3**  
-        Protein Data Bank (PDB).  
-        Structural information related to bacterial metabolic proteins.
-
-        **Reference 4**  
-        Review literature on synbiotic efficiency, probiotic stability, and prebiotic synergy.
-        """
-    )
+# --- VALIDATION ---
+elif menu == "📊 Validation virtuelle":
+    st.header("📊 Validation in silico")
+    st.markdown("Calcule et visualise la performance des formulations bioactives.")
+    data = {"Composant": ["Miel", "PLA", "EPS", "L. plantarum"],
+            "Contribution": [40, 1, 2, 1]}
+    df = pd.DataFrame(data)
+    st.bar_chart(df)
 
 
 
