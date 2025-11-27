@@ -1,6 +1,10 @@
 streamlit
 pandas
-plotly
+matplotlib
+requests
+numpy
+
+
 
 
 
