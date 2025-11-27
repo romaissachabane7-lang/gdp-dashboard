@@ -180,3 +180,46 @@ elif page == "Validation":
         "Contribution":[40,1,2,1]
     })
     st.bar_chart(df.set_index("Composant"))
+import streamlit as st
+import pandas as pd
+from io import StringIO
+
+st.title("BioPlateforme Algérienne — Formulation")
+
+st.write("Saisissez les paramètres et validez pour générer un rapport.")
+
+# --- Inputs utilisateur avec validation ---
+nom = st.text_input("Nom du chercheur", "VotreNom")
+miel = st.number_input("Miel (%)", min_value=0, max_value=100, value=100)
+acide = st.number_input("Acide phényllactique (%)", min_value=0, max_value=100, value=10)
+exopolysaccharides = st.number_input("Exopolysaccharides (%)", min_value=0, max_value=100, value=10)
+lacto = st.number_input("Lactobacillus plantarum (%)", min_value=0, max_value=100, value=5)
+
+# --- Calcul du score (exemple simple) ---
+score = round((miel*0.1 + acide*0.2 + exopolysaccharides*0.3 + lacto*0.4), 2)
+st.success(f"Formulation validée — score: {score}")
+
+# --- Création du DataFrame ---
+df = pd.DataFrame({
+    "Nom du chercheur": [nom],
+    "Miel (%)": [miel],
+    "Acide phényllactique (%)": [acide],
+    "Exopolysaccharides (%)": [exopolysaccharides],
+    "Lactobacillus plantarum (%)": [lacto],
+    "Score": [score]
+})
+
+# --- Générer le CSV en mémoire ---
+csv_buffer = StringIO()
+df.to_csv(csv_buffer, index=False)
+csv_buffer.seek(0)  # très important pour que le téléchargement fonctionne
+csv_data = csv_buffer.getvalue()
+
+# --- Bouton de téléchargement CSV ---
+st.download_button(
+    label="Télécharger le rapport",
+    data=csv_data,
+    file_name="formulation.csv",
+    mime="text/csv"
+)
+
