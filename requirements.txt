@@ -1,8 +1,9 @@
 streamlit
 pandas
-matplotlib
 requests
-numpy
+matplotlib
+
+
 
 
 
