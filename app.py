@@ -1,137 +1,171 @@
 # app.py
 import streamlit as st
 import pandas as pd
-import plotly.express as px
 from io import StringIO
+import plotly.express as px
 
 # -----------------------
-# Configuration de la page
+# Page config
 # -----------------------
 st.set_page_config(
-    page_title="BioPlateforme Algérienne",
+    page_title="Algerian BioPlatform",
     page_icon="🧪",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
 # -----------------------
-# Navigation
+# Custom CSS (rose clair)
 # -----------------------
-page = st.sidebar.radio("Navigation", ["Accueil", "Formulation", "Références", "Validation"])
+st.markdown("""
+    <style>
+    .stApp {
+        background-color: #ffe6f0;
+    }
+    .logo-container {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
+# -----------------------
+# Function to display a scientific SVG logo (honey drop + bacteria)
+# -----------------------
+def display_logo():
+    svg_logo = """
+    <svg width="150" height="150" viewBox="0 0 200 200">
+        <!-- Honey drop -->
+        <path d="M100 20 C120 50, 130 100, 100 160 C70 100, 80 50, 100 20 Z" fill="#ffcc33" stroke="#b38f00" stroke-width="3"/>
+        <!-- Bacteria (Lactobacillus plantarum) -->
+        <rect x="85" y="60" width="30" height="60" rx="15" ry="15" fill="#b38f00"/>
+        <rect x="70" y="80" width="30" height="60" rx="15" ry="15" fill="#b38f00" transform="rotate(-20 85 110)"/>
+        <rect x="100" y="90" width="30" height="60" rx="15" ry="15" fill="#b38f00" transform="rotate(20 115 120)"/>
+    </svg>
+    """
+    st.markdown(f'<div class="logo-container">{svg_logo}</div>', unsafe_allow_html=True)
+
+# -----------------------
+# Sidebar navigation
+# -----------------------
+page = st.sidebar.radio("Navigation", ["Home", "Formulation", "References", "Validation"])
 
 # =======================
-# PAGE ACCUEIL
+# HOME PAGE
 # =======================
-if page == "Accueil":
-    st.title("🧪 BioPlateforme Algérienne")
+if page == "Home":
+    display_logo()
+    st.title("🧪 Algerian BioPlatform - Scientific AI Platform")
     st.markdown("""
-    Bienvenue sur la plateforme scientifique automatisée.
+    Welcome to the Algerian BioPlatform, a **scientific and professional platform** for biotechnology research.
     
-    Cette plateforme permet :
-    - La formulation de produits
-    - La génération automatique de scores
-    - La validation e-SILICO avec graphiques
-    - L’accès aux références NCBI, PubMed et PDB
+    Features:
+    - Product formulation with automated scoring
+    - In silico validation with interactive graphs
+    - Access to references from NCBI, PDB, and UniProt
+    - Professional downloadable reports
     """)
+    st.info("Use the sidebar to navigate between Formulation, References, and Validation.")
 
 # =======================
-# PAGE FORMULATION
+# FORMULATION PAGE
 # =======================
 elif page == "Formulation":
-    st.title("Formulation du produit")
+    st.title("Product Formulation")
 
-    # Inputs utilisateur avec clés uniques
-    nom = st.text_input("Nom du chercheur", "VotreNom", key="nom_formulation")
-    miel = st.number_input("Miel (%)", 0, 100, 100, key="miel_formulation")
-    acide = st.number_input("Acide phényllactique (%)", 0, 100, 10, key="acide_formulation")
+    # Inputs
+    nom = st.text_input("Researcher Name", "YourName", key="nom_formulation")
+    miel = st.number_input("Honey (%)", 0, 100, 100, key="miel_formulation")
+    acide = st.number_input("Phenyl lactic acid (%)", 0, 100, 10, key="acide_formulation")
     exopolysaccharides = st.number_input("Exopolysaccharides (%)", 0, 100, 10, key="exopolys_formulation")
     lacto = st.number_input("Lactobacillus plantarum (%)", 0, 100, 5, key="lacto_formulation")
 
-    # Calcul du score
+    # Score
     score = round((miel*0.1 + acide*0.2 + exopolysaccharides*0.3 + lacto*0.4), 2)
-    st.success(f"Formulation validée — score: {score}")
+    st.success(f"Formulation validated — score: {score}")
 
-    # Création du DataFrame
+    # DataFrame
     df = pd.DataFrame({
-        "Nom du chercheur": [nom],
-        "Miel (%)": [miel],
-        "Acide phényllactique (%)": [acide],
+        "Researcher Name": [nom],
+        "Honey (%)": [miel],
+        "Phenyl lactic acid (%)": [acide],
         "Exopolysaccharides (%)": [exopolysaccharides],
         "Lactobacillus plantarum (%)": [lacto],
         "Score": [score]
     })
 
-    # Générer CSV en mémoire pour téléchargement
+    # CSV download
     csv_buffer = StringIO()
     df.to_csv(csv_buffer, index=False)
     csv_buffer.seek(0)
-    csv_data = csv_buffer.getvalue()
-
     st.download_button(
-        label="Télécharger le rapport",
-        data=csv_data,
+        "Download report",
+        data=csv_buffer.getvalue(),
         file_name="formulation.csv",
         mime="text/csv",
         key="download_formulation"
     )
 
 # =======================
-# PAGE REFERENCES
+# REFERENCES PAGE
 # =======================
-elif page == "Références":
-    st.title("Références scientifiques")
+elif page == "References":
+    st.title("Scientific References")
+    st.markdown("Search for metabolites, enzymes, or proteins and get references from NCBI, PDB, and UniProt.")
 
-    # Exemple : tableau automatique des références
-    refs_data = {
-        "Source": ["NCBI", "PubMed", "PDB"],
-        "Lien": [
-            "https://www.ncbi.nlm.nih.gov",
-            "https://pubmed.ncbi.nlm.nih.gov",
-            "https://www.rcsb.org"
-        ],
-        "Description": [
-            "Base de données génétiques et biologiques",
-            "Articles scientifiques biomédicaux",
-            "Structures 3D de protéines et macromolécules"
-        ]
-    }
+    query = st.text_input("Enter keyword", key="query_ref")
+    if st.button("Search"):
+        st.info(f"Searching for: {query}")
 
-    refs_df = pd.DataFrame(refs_data)
-    st.dataframe(refs_df, use_container_width=True)
+        # Dynamic search URLs
+        ncbi_url = f"https://pubmed.ncbi.nlm.nih.gov/?term={query}"
+        pdb_url = f"https://www.rcsb.org/search?q={query}"
+        uniprot_url = f"https://www.uniprot.org/uniprot/?query={query}"
 
-    # Liens cliquables
-    for i in range(len(refs_df)):
-        st.markdown(f"[{refs_df['Source'][i]}]({refs_df['Lien'][i]}) : {refs_df['Description'][i]}")
+        refs_df = pd.DataFrame({
+            "Database": ["NCBI PubMed", "PDB", "UniProt"],
+            "Link": [ncbi_url, pdb_url, uniprot_url],
+            "Description": [
+                "Articles and publications",
+                "3D protein structures",
+                "Protein sequences and annotations"
+            ]
+        })
+
+        st.dataframe(refs_df, use_container_width=True)
+        for i in range(len(refs_df)):
+            st.markdown(f"[{refs_df['Database'][i]}]({refs_df['Link'][i]}) : {refs_df['Description'][i]}")
 
 # =======================
-# PAGE VALIDATION IN SILICO
+# VALIDATION PAGE
 # =======================
 elif page == "Validation":
-    st.title("Validation e-SILICO")
+    st.title("In silico Validation")
+    st.markdown("Automatic visualization of formulation contributions")
 
-    st.markdown("Validation automatique et visualisation graphique des formulations")
-
-    # Exemple graphique interactif
-    # Ici on simule des valeurs pour montrer les performances
+    # Validation data
     validation_df = pd.DataFrame({
-        "Paramètre": ["Miel", "Acide", "Exopolysaccharides", "Lactobacillus plantarum"],
-        "Valeur (%)": [100, 10, 10, 5],
-        "Score contribution": [miel*0.1, acide*0.2, exopolysaccharides*0.3, lacto*0.4]
+        "Component": ["Honey", "Phenyl lactic acid", "Exopolysaccharides", "Lactobacillus plantarum"],
+        "Contribution": [miel*0.1, acide*0.2, exopolysaccharides*0.3, lacto*0.4]
     })
 
     st.dataframe(validation_df, use_container_width=True)
 
+    # Plotly bar chart
     fig = px.bar(
         validation_df,
-        x="Paramètre",
-        y="Score contribution",
-        text="Score contribution",
-        title="Contribution des composants au score total",
-        labels={"Score contribution":"Contribution au score"}
+        x="Component",
+        y="Contribution",
+        text="Contribution",
+        title="Component Contribution to Total Score",
+        labels={"Contribution":"Score Contribution"},
+        color="Contribution",
+        color_continuous_scale="Teal"
     )
-    fig.update_traces(texttemplate="%{text:.2f}", textposition="outside", marker_color="teal")
-    fig.update_layout(yaxis=dict(range=[0, max(validation_df["Score contribution"])*1.2]))
+    fig.update_traces(texttemplate="%{text:.2f}", textposition="outside")
+    fig.update_layout(yaxis=dict(range=[0, max(validation_df["Contribution"])*1.2]))
     st.plotly_chart(fig, use_container_width=True)
+
 
 
 
