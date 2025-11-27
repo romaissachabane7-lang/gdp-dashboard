@@ -14,10 +14,39 @@ from io import StringIO
 from typing import List, Dict, Optional
 import matplotlib.pyplot as plt
 
-# -----------------------
-# Page config and simple styling (light rose)
-# -----------------------
-st.set_page_config(page_title="BioSyn Pro", page_icon="🧪", layout="wide")
+honey_bacteria_logo = """
+<div class="logo">
+<svg width="160" height="160" viewBox="0 0 200 200">
+  <circle cx="100" cy="100" r="65" fill="#ffd74d" stroke="#d4a017" stroke-width="6"/>
+  <ellipse cx="100" cy="100" rx="45" ry="22" fill="#fff6d5" stroke="#d4a017" stroke-width="4"/>
+  <circle cx="75" cy="100" r="8" fill="#d4a017"/>
+  <circle cx="100" cy="100" r="8" fill="#d4a017"/>
+  <circle cx="125" cy="100" r="8" fill="#d4a017"/>
+  <path d="M60 60 Q100 20 140 60" stroke="#d4a017" stroke-width="4" fill="none"/>
+</svg>
+</div>
+"""
+# ---- PAGE D’ACCUEIL AMÉLIORÉE ----
+if page == "Home":
+    st.markdown(honey_bacteria_logo, unsafe_allow_html=True)
+
+    st.markdown('<div class="big-title">BIOPLATFORM</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sub-title">Advanced Synbiotic Formulation & In-Silico Validation</div>', unsafe_allow_html=True)
+
+    st.write("")
+    st.write("Welcome to **Bioplatform**, a professional scientific environment for synbiotic formulation, automated reference extraction, and in-silico validation.")
+    
+    st.markdown("""
+    ### What you can do here:
+    - Formulate your synbiotic composition  
+    - Automatically extract scientific references (NCBI, UniProt, PDB)  
+    - Validate results with optimized in-silico graphs  
+    - Generate professional downloadable reports  
+    """)
+
+    st.write("")
+    st.info("Use the left menu to navigate through the platform.")
+
 
 st.markdown(
     """
@@ -379,8 +408,66 @@ elif selection == "Settings":
     - Edit the code in your repository to further customize visuals and weights.
     """)
     st.markdown("Deployment checklist: update `requirements.txt`, commit to repository, redeploy.")
+# ---- STYLING GLOBAL ----
+import streamlit as st
+
+st.markdown("""
+<style>
+/* Police professionnelle */
+html, body, [class*="css"] {
+    font-family: 'Times New Roman', serif !important;
+}
+
+/* Couleur rose clair + design premium */
+:root {
+    --rose: #f9dfe8;
+    --gold: #d4a017;
+}
+
+.main {
+    background-color: #ffffff;
+}
+
+header, .css-18ni7ap, .css-1v0mbdj {
+    background-color: var(--rose) !important;
+}
+
+/* Titre principal */
+.big-title {
+    font-size: 2.8rem;
+    font-weight: bold;
+    color: #333333;
+    text-align: center;
+    margin-bottom: 0px;
+}
+
+/* Sous-titre */
+.sub-title {
+    font-size: 1.3rem;
+    color: #555555;
+    text-align: center;
+    margin-top: -10px;
+}
+
+/* Logo généré (simple, classe, scientifique) */
+.logo {
+    text-align: center;
+    margin-bottom: 20px;
+}
+</style>
+""", unsafe_allow_html=True)
+import matplotlib.pyplot as plt
+
+fig, ax = plt.subplots(figsize=(6,4))  # Taille moyenne
+ax.plot(data_x, data_y)
+ax.set_title("In-Silico Validation", fontsize=14)
+ax.set_xlabel("Parameter", fontsize=10)
+ax.set_ylabel("Response", fontsize=10)
+
+st.pyplot(fig)
 
 # End of app
+
 
 
 
