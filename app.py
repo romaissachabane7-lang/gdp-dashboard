@@ -143,10 +143,12 @@ elif page == "Formulation":
         st.session_state.metabolites[idx]["nom"] = meta_name
         st.session_state.metabolites[idx]["pourcentage"] = float(meta_pct)
 
+    # --- CORRECTION : suppression sans erreur ---
     if to_remove is not None:
         st.session_state.metabolites = [m for m in st.session_state.metabolites if m["id"] != to_remove]
-        st.experimental_rerun()  # supprime la case sans afficher d'erreur
+        # pas de st.experimental_rerun(), suppression fluide
 
+    # --- Calcul du score ---
     if st.button("Valider la formulation", key="validate_formulation"):
         score = round((miel * 0.2 + pla * 2 + eps * 1.5 + lacto * 3), 2)
         for meta in st.session_state.metabolites:
