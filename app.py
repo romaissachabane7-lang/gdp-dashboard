@@ -197,6 +197,33 @@ elif page == "Validation":
         "Contribution":[f['miel'],f['pla'],f['eps'],f['lacto']]
     })
     st.bar_chart(df.set_index("Composant"))
+# ---------------------------------------------
+# INTERPRÉTATION DU SCORE
+# ---------------------------------------------
+
+def interpretation_score(score):
+    if score < 10:
+        return ("🔴 Score faible — reformulation nécessaire",
+                "red")
+    elif 10 <= score < 20:
+        return ("🟡 Score bon — formulation stable et cohérente",
+                "orange")
+    else:
+        return ("🟢 Score excellent — formulation optimale",
+                "green")
+
+# Appel de la fonction
+message, color = interpretation_score(score)
+
+# Affichage propre dans Streamlit
+st.markdown(f"""
+<div style="padding:15px; border-radius:10px; background-color:{color}; color:white; font-size:18px;">
+<b>Interprétation du score :</b><br>
+{message}<br><br>
+<b>Score obtenu :</b> {score}
+</div>
+""", unsafe_allow_html=True)
+
 
 
 
