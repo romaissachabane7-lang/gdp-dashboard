@@ -13,7 +13,6 @@ svg_logo = """
 <div style="display:flex;align-items:center;">
   <div style="width:90px;height:90px;background:linear-gradient(180deg,#f3d886,#d8b05a);border-radius:18px;
               display:flex;align-items:center;justify-content:center;padding:8px;box-shadow:0 2px 6px rgba(0,0,0,0.08)">
-    <!-- simple stylized honey circle + rod (bacterium) -->
     <svg width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
@@ -36,51 +35,34 @@ svg_logo = """
 </div>
 """
 
-# --- Global CSS (unchanged base + premium score colors) ---
+# --- Global CSS ---
 st.markdown(
     """
     <style>
     .stApp { background-color: #fbf7ee; }
     .topbar { padding: 0; margin-bottom: 14px; }
-    .card {
-        background-color: #fffaf0;
-        border-radius: 10px;
-        padding: 18px;
-        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-        margin-bottom: 18px;
-    }
+    .card { background-color: #fffaf0; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 18px; }
     .nav-button { background-color: transparent; border: none; font-weight:600; color: #3b2f1f; padding: 8px 14px; border-radius:6px; }
     .nav-button:hover { background-color: #efe2b3; }
     .section-title { color:#4a3f2a; font-weight:700; font-size:20px; margin-bottom:10px; }
     .muted { color:#7a6b5a; font-size:13px; }
 
-    /* --- Score premium styles (visible, professionnel) --- */
-    .score-card {
-      padding:20px;
-      border-radius:12px;
-      color: #ffffff;
-      box-shadow: 0 6px 20px rgba(13,27,42,0.12);
-      margin-top:12px;
-      border: 1px solid rgba(255,255,255,0.06);
-      max-width: 720px;
-    }
-    .score-excellent { background: linear-gradient(180deg, #0D1B2A 0%, #102232 100%); } /* bleu nuit */
-    .score-good      { background: linear-gradient(180deg, #1B263B 0%, #243447 100%); } /* bleu pétrole */
-    .score-poor      { background: linear-gradient(180deg, #415A77 0%, #546E8C 100%); } /* gris anthracite */
+    .score-card { padding:20px; border-radius:12px; color: #ffffff; box-shadow: 0 6px 20px rgba(13,27,42,0.12); margin-top:12px; border: 1px solid rgba(255,255,255,0.06); max-width: 720px; }
+    .score-excellent { background: linear-gradient(180deg, #0D1B2A 0%, #102232 100%); }
+    .score-good      { background: linear-gradient(180deg, #1B263B 0%, #243447 100%); }
+    .score-poor      { background: linear-gradient(180deg, #415A77 0%, #546E8C 100%); }
 
     .score-title { font-size:16px; opacity:0.95; margin-bottom:8px; }
     .score-value { font-size:28px; font-weight:700; margin-top:6px; }
     .score-text { font-size:15px; opacity:0.95; margin-top:8px; line-height:1.4; }
 
-    /* Metabolite inputs */
     .meta-input { margin-bottom:6px; }
-
     </style>
     """,
     unsafe_allow_html=True,
 )
 
-# --- Header (logo + top nav) ---
+# --- Header ---
 st.markdown("<div class='topbar'></div>", unsafe_allow_html=True)
 col1, col2 = st.columns([2, 5])
 with col1:
@@ -100,7 +82,7 @@ st.sidebar.title("Navigation")
 page = st.sidebar.radio("", ["Accueil", "Formulation", "Références", "Validation"], index=0)
 
 # -------------------------
-#  PAGE : ACCUEIL (IDENTIQUE)
+#  PAGE : ACCUEIL
 # -------------------------
 if page == "Accueil":
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -117,7 +99,7 @@ if page == "Accueil":
         st.markdown('<div class="card"><div style="font-weight:700;color:#3b2f1f">In Silico Validator</div><div class="muted">Score & recommandations</div></div>', unsafe_allow_html=True)
 
 # -------------------------
-#  PAGE : FORMULATION (MODIFIED: premium score + robust dynamic metabolites)
+#  PAGE : FORMULATION
 # -------------------------
 elif page == "Formulation":
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -125,74 +107,57 @@ elif page == "Formulation":
     st.markdown('<div class="muted">Saisissez les paramètres et générez un rapport détaillé, analysé selon des critères scientifiques objectifs.</div>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Inputs principaux (unchanged)
     chercheur = st.text_input("Nom du chercheur", placeholder="Prénom Nom — ex : Samir B.")
     miel = st.slider("Miel (%)", 0, 100, 40)
     pla = st.slider("Acide phényllactique (%)", 0, 10, 1)
     eps = st.slider("Exopolysaccharides (%)", 0, 10, 2)
     lacto = st.slider("Lactobacillus plantarum (%)", 0, 5, 1)
 
-    # --- Metabolites dynamiques (robuste + écriture professionnelle) ---
     st.subheader("Ajouter des métabolites ou composés supplémentaires")
     st.markdown("**Instructions courtes (professionnel) :** saisissez le nom du composé tel qu'il apparaît dans la littérature (p. ex. *Acide férulique*), puis indiquez la contribution en pourcentage. Laissez le champ vide si non applicable.")
 
     if "metabolites" not in st.session_state:
-        st.session_state.metabolites = []  # list of dicts: {"id":int, "nom":str, "pourcentage":float}
+        st.session_state.metabolites = []
 
-    # bouton pour ajouter
     if st.button("+ Ajouter un métabolite", key="add_meta_btn"):
-        # create a unique id
         new_id = 1
         if st.session_state.metabolites:
             new_id = max(m["id"] for m in st.session_state.metabolites) + 1
         st.session_state.metabolites.append({"id": new_id, "nom": "", "pourcentage": 0.0})
 
-    # render metabolite inputs in stable way
     to_remove = None
     for idx, meta in enumerate(st.session_state.metabolites):
         m_id = meta["id"]
         col1, col2, col3 = st.columns([3,1,1])
         with col1:
-            # placeholder shows professional examples
-            meta_name = col1.text_input(f"Nom du composé {m_id}", value=meta.get("nom",""),
+            meta_name = col1.text_input(f"Nom du composé", value=meta.get("nom",""),
                                        placeholder="Ex : Acide férulique, Catéchines, Peptides antimicrobiens...",
                                        key=f"meta_name_{m_id}")
         with col2:
-            meta_pct = col2.number_input(f"% {m_id}", value=meta.get("pourcentage",0.0),
+            meta_pct = col2.number_input(f"%", value=meta.get("pourcentage",0.0),
                                          min_value=0.0, step=0.1, format="%.2f", key=f"meta_pct_{m_id}")
         with col3:
-            # supprimer bouton (safe via marking)
             if col3.button("Supprimer", key=f"del_meta_{m_id}"):
                 to_remove = m_id
 
-        # update session_state with current values (to keep them)
         st.session_state.metabolites[idx]["nom"] = meta_name
         st.session_state.metabolites[idx]["pourcentage"] = float(meta_pct)
 
-    # remove requested metabolite (if any) safely
     if to_remove is not None:
         st.session_state.metabolites = [m for m in st.session_state.metabolites if m["id"] != to_remove]
+        st.experimental_rerun()  # supprime la case sans afficher d'erreur
 
-    # --- Validation et calcul du score (premium display) ---
     if st.button("Valider la formulation", key="validate_formulation"):
-
-        # calcul score (garde ta formule initiale, puis ajoute métabolites)
         score = round((miel * 0.2 + pla * 2 + eps * 1.5 + lacto * 3), 2)
-
-        # pondération additionnelle pour métabolites (ajustable)
         for meta in st.session_state.metabolites:
             try:
                 pct = float(meta.get("pourcentage", 0.0))
             except Exception:
                 pct = 0.0
-            # poids scientifique modéré : 1.2 (tu peux ajuster)
             score += pct * 1.2
-
         score = round(score, 2)
 
-        # Interpretation with premium colors (blue night / petrol / anthracite)
         def interpretation_score(score):
-            # thresholds chosen to be meaningful with your scoring formula
             if score < 15:
                 return ("Score faible — une optimisation de la composition est recommandée pour améliorer stabilité et efficacité.", "#415A77", "score-poor")
             elif 15 <= score < 30:
@@ -202,7 +167,6 @@ elif page == "Formulation":
 
         message, hex_color, css_class = interpretation_score(score)
 
-        # affichage premium (visible)
         st.markdown(
             f"""
             <div class="score-card {css_class}" style="background-color:{hex_color};">
@@ -214,7 +178,6 @@ elif page == "Formulation":
             unsafe_allow_html=True
         )
 
-        # Sauvegarde CSV améliorée (inclut métabolites en colonnes séparées si existants)
         out_dir = "resultats"
         try:
             os.makedirs(out_dir, exist_ok=True)
@@ -226,16 +189,12 @@ elif page == "Formulation":
                 "lacto": lacto,
                 "score": score
             }
-
-            # convert metabolites into columns: name_i, pct_i
             meta_cols = {}
             for i, meta in enumerate(st.session_state.metabolites, start=1):
                 meta_cols[f"meta_{i}_nom"] = meta.get("nom", "")
                 meta_cols[f"meta_{i}_pourcentage"] = meta.get("pourcentage", 0.0)
-
             row = {**base, **meta_cols}
             df = pd.DataFrame([row])
-
             safe_name = (chercheur or "anonyme").strip().replace(" ", "_").replace("/", "_")
             path = os.path.join(out_dir, f"formulation_{safe_name}.csv")
             df.to_csv(path, index=False)
@@ -245,7 +204,7 @@ elif page == "Formulation":
             st.error(f"Erreur lors de la sauvegarde du rapport : {e}")
 
 # -------------------------
-#  PAGE : RÉFÉRENCES (IMPROVED PRESENTATION)
+#  PAGE : RÉFÉRENCES
 # -------------------------
 elif page == "Références":
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -254,12 +213,10 @@ elif page == "Références":
     st.markdown("</div>", unsafe_allow_html=True)
 
     terme = st.text_input("Rechercher (ex: Lactobacillus plantarum OR phenyllactic acid OR plantaricin)")
-
     if terme:
         st.markdown(f"**Résultats pour :** {html.escape(terme)}")
         st.markdown("Affichage professionnel — les résultats incluent titre, date et lien direct lorsque disponible.")
-
-        # --- PubMed (improved display with clickable links) ---
+        # PubMed
         st.markdown("### PubMed — Top résultats")
         try:
             esearch_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi"
@@ -272,15 +229,12 @@ elif page == "Références":
                 s = requests.get(esummary_url, params={"db":"pubmed","id":",".join(ids),"retmode":"json"}, timeout=10)
                 s.raise_for_status()
                 summaries = s.json().get("result", {})
-                # build a neat list
                 for pid in ids:
                     info = summaries.get(pid, {})
                     title = info.get("title") or f"PubMed {pid}"
                     pubdate = info.get("pubdate", "")
                     source = info.get("source", "")
-                    # PubMed URL
                     pubmed_url = f"https://pubmed.ncbi.nlm.nih.gov/{pid}/"
-                    # display in professional citation style
                     display = f"- <b><a href='{pubmed_url}' target='_blank' style='color:#0A84FF;text-decoration:none'>{html.escape(title)}</a></b>"
                     extra = f" — {html.escape(source)} {html.escape(pubdate)}" if source or pubdate else ""
                     st.markdown(display + extra, unsafe_allow_html=True)
@@ -289,7 +243,7 @@ elif page == "Références":
         except Exception as e:
             st.error("Recherche PubMed impossible (vérifiez la connexion).")
 
-        # --- UniProt (improved display with links when accession present) ---
+        # UniProt
         st.markdown("### UniProt — Top hits")
         try:
             uq = "https://rest.uniprot.org/uniprotkb/search"
@@ -304,8 +258,35 @@ elif page == "Références":
                     prot_desc = entry.get("proteinDescription", {})
                     rec_name = prot_desc.get("recommendedName", {}).get("fullName", {}).get("value", "") if prot_desc else ""
                     display_label = rec_name or acc
-                    # UniProt URL
                     uniprot_url = f"https://rest.uniprot.org/uniprotkb/{acc}"
-                    st.markdown(f"- <a href='{uniprot_url}' target
+                    st.markdown(f"- <a href='{uniprot_url}' target='_blank' style='color:#0A84FF;text-decoration:none'><b>{html.escape(display_label)}</b></a> — Accession: `{acc}`", unsafe_allow_html=True)
+            else:
+                st.info("Aucun hit UniProt retourné.")
+        except Exception as e:
+            st.error("Recherche UniProt impossible (temps de réponse ou réseau).")
 
+        # PDB
+        st.markdown("### PDB / RCSB")
+        try:
+            query_encoded = urllib.parse.quote_plus(terme)
+            rcsb_link = f"https://www.rcsb.org/search?request={{\"query\":\"{query_encoded}\"}}"
+            st.markdown(f"- Effectuer une recherche sur RCSB PDB : <a href='{rcsb_link}' target='_blank' style='color:#0A84FF;text-decoration:none'>Ouvrir RCSB</a>", unsafe_allow_html=True)
+            st.markdown("<div style='margin-top:6px' class='muted'>Astuce : utilisez l'accession UniProt (si trouvée ci-dessus) pour retrouver des structures corrélées.</div>", unsafe_allow_html=True)
+        except Exception:
+            st.info("Impossible de générer le lien RCSB.")
+
+# -------------------------
+#  PAGE : VALIDATION
+# -------------------------
+elif page == "Validation":
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Validation in silico</div>', unsafe_allow_html=True)
+    st.markdown('<div class="muted">Visualisation et score de stabilité</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+    df = pd.DataFrame({
+        "Composant":["Miel","PLA","EPS","Lactobacillus"],
+        "Contribution":[40,1,2,1]
+    })
+    st.bar_chart(df.set_index("Composant"))
 
