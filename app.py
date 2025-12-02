@@ -87,51 +87,23 @@ page = st.sidebar.radio("", ["Accueil", "Formulation", "Références", "Validati
 if page == "Accueil":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Bienvenue</div>', unsafe_allow_html=True)
-st.markdow
-n(
-ptimisation de la composition est recommandée pour améliorer stabilité et efficacité.", "#415A77", "score-poor")
-            elif 15 <= score < 30:
-                return ("Score satisfaisant — formulation globalement cohérente; recommandez tests supplémentaires et optimisation des concentrations.", "#1B263B", "score-good")
-            else:
-                return ("Score excellent — formulation scientifiquement robuste et équilibrée. Recommandé pour validation expérimentale.", "#0D1B2A", "score-excellent")
+    st.markdown('<div class="muted">Optimisation de la composition est recommandée pour améliorer stabilité et efficacité.</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        message, hex_color, css_class = interpretation_score(score)
+# -------------------------
+#  PAGE : VALIDATION
+# -------------------------
+elif page == "Validation":
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Validation in silico</div>', unsafe_allow_html=True)
+    st.markdown('<div class="muted">Visualisation et score de stabilité</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
 
-        st.markdown(
-            f"""
-            <div class="score-card {css_class}" style="background-color:{hex_color};">
-              <div class="score-title">Résultat de l'analyse in silico — interprétation professionnelle</div>
-              <div class="score-value">Score : {score}</div>
-              <div class="score-text">{html.escape(message)}</div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )
-
-        out_dir = "resultats"
-        try:
-            os.makedirs(out_dir, exist_ok=True)
-            base = {
-                "chercheur": chercheur or "anonyme",
-                "miel": miel,
-                "pla": pla,
-                "eps": eps,
-                "lacto": lacto,
-                "score": score
-            }
-            meta_cols = {}
-            for i, meta in enumerate(st.session_state.metabolites, start=1):
-                meta_cols[f"meta_{i}_nom"] = meta.get("nom", "")
-                meta_cols[f"meta_{i}_pourcentage"] = meta.get("pourcentage", 0.0)
-            row = {**base, **meta_cols}
-            df = pd.DataFrame([row])
-            safe_name = (chercheur or "anonyme").strip().replace(" ", "_").replace("/", "_")
-            path = os.path.join(out_dir, f"formulation_{safe_name}.csv")
-            df.to_csv(path, index=False)
-            st.success("Rapport sauvegardé avec succès.")
-            st.info(f"Chemin : {path}")
-        except Exception as e:
-            st.error(f"Erreur lors de la sauvegarde du rapport : {e}")
+    df = pd.DataFrame({
+        "Composant":["Miel","PLA","EPS","Lactobacillus"],
+        "Contribution":[40,1,2,1]
+    })
+    st.bar_chart(df.set_index("Composant"))
 
 # -------------------------
 #  PAGE : RÉFÉRENCES
@@ -146,6 +118,7 @@ elif page == "Références":
     if terme:
         st.markdown(f"**Résultats pour :** {html.escape(terme)}")
         st.markdown("Affichage professionnel — les résultats incluent titre, date et lien direct lorsque disponible.")
+
         # PubMed
         st.markdown("### PubMed — Top résultats")
         try:
@@ -166,8 +139,7 @@ elif page == "Références":
                     source = info.get("source", "")
                     pubmed_url = f"https://pubmed.ncbi.nlm.nih.gov/{pid}/"
                     display = f"- <b><a href='{pubmed_url}' target='_blank' style='color:#0A84FF;text-decoration:none'>{html.escape(title)}</a></b>"
-                    extra = f" —
-{html.escape(source)} {html.escape(pubdate)}" if source or pubdate else ""
+                    extra = f" — {html.escape(source)} {html.escape(pubdate)}" if source or pubdate else ""
                     st.markdown(display + extra, unsafe_allow_html=True)
             else:
                 st.info("Aucun article PubMed trouvé pour ce terme.")
@@ -206,20 +178,7 @@ elif page == "Références":
         except Exception:
             st.info("Impossible de générer le lien RCSB.")
 
-# -------------------------
-#  PAGE : VALIDATION
-# -------------------------
-elif page == "Validation":
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Validation in silico</div>', unsafe_allow_html=True)
-    st.markdown('<div class="muted">Visualisation et score de stabilité</div>', unsafe_allow_html=True)
-    st.markdown("</div>", unsafe_allow_html=True)
 
-    df = pd.DataFrame({
-        "Composant":["Miel","PLA","EPS","Lactobacillus"],
-        "Contribution":[40,1,2,1]
-    })
-    st.bar_chart(df.set_index("Composant"))
 
 
 
