@@ -4,11 +4,12 @@ import requests
 import html
 import os
 import urllib.parse
+import uuid  # pour ID unique des métabolites
 
-# CONFIG
+# ----------------- CONFIG -----------------
 st.set_page_config(page_title="BioPlateforme Algérienne", layout="wide")
 
-# --- SVG logo (honey + bacteria motif) ---
+# ----------------- SVG LOGO -----------------
 svg_logo = """
 <div style="display:flex;align-items:center;">
   <div style="width:90px;height:90px;background:linear-gradient(180deg,#f3d886,#d8b05a);border-radius:18px;
@@ -35,34 +36,28 @@ svg_logo = """
 </div>
 """
 
-# --- Global CSS ---
-st.markdown(
-    """
-    <style>
-    .stApp { background-color: #fbf7ee; }
-    .topbar { padding: 0; margin-bottom: 14px; }
-    .card { background-color: #fffaf0; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 18px; }
-    .nav-button { background-color: transparent; border: none; font-weight:600; color: #3b2f1f; padding: 8px 14px; border-radius:6px; }
-    .nav-button:hover { background-color: #efe2b3; }
-    .section-title { color:#4a3f2a; font-weight:700; font-size:20px; margin-bottom:10px; }
-    .muted { color:#7a6b5a; font-size:13px; }
+# ----------------- CSS GLOBAL -----------------
+st.markdown("""
+<style>
+.stApp { background-color: #fbf7ee; }
+.topbar { padding: 0; margin-bottom: 14px; }
+.card { background-color: #fffaf0; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 18px; }
+.nav-button { background-color: transparent; border: none; font-weight:600; color: #3b2f1f; padding: 8px 14px; border-radius:6px; }
+.nav-button:hover { background-color: #efe2b3; }
+.section-title { color:#4a3f2a; font-weight:700; font-size:20px; margin-bottom:10px; }
+.muted { color:#7a6b5a; font-size:13px; }
+.score-card { padding:20px; border-radius:12px; color: #ffffff; box-shadow: 0 6px 20px rgba(13,27,42,0.12); margin-top:12px; border: 1px solid rgba(255,255,255,0.06); max-width: 720px; }
+.score-excellent { background: linear-gradient(180deg, #0D1B2A 0%, #102232 100%); }
+.score-good { background: linear-gradient(180deg, #1B263B 0%, #243447 100%); }
+.score-poor { background: linear-gradient(180deg, #415A77 0%, #546E8C 100%); }
+.score-title { font-size:16px; opacity:0.95; margin-bottom:8px; }
+.score-value { font-size:28px; font-weight:700; margin-top:6px; }
+.score-text { font-size:15px; opacity:0.95; margin-top:8px; line-height:1.4; }
+.meta-input { margin-bottom:6px; }
+</style>
+""", unsafe_allow_html=True)
 
-    .score-card { padding:20px; border-radius:12px; color: #ffffff; box-shadow: 0 6px 20px rgba(13,27,42,0.12); margin-top:12px; border: 1px solid rgba(255,255,255,0.06); max-width: 720px; }
-    .score-excellent { background: linear-gradient(180deg, #0D1B2A 0%, #102232 100%); }
-    .score-good      { background: linear-gradient(180deg, #1B263B 0%, #243447 100%); }
-    .score-poor      { background: linear-gradient(180deg, #415A77 0%, #546E8C 100%); }
-
-    .score-title { font-size:16px; opacity:0.95; margin-bottom:8px; }
-    .score-value { font-size:28px; font-weight:700; margin-top:6px; }
-    .score-text { font-size:15px; opacity:0.95; margin-top:8px; line-height:1.4; }
-
-    .meta-input { margin-bottom:6px; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# --- Header ---
+# ----------------- HEADER -----------------
 st.markdown("<div class='topbar'></div>", unsafe_allow_html=True)
 col1, col2 = st.columns([2, 5])
 with col1:
@@ -77,22 +72,18 @@ with col2:
       </div>
     """, unsafe_allow_html=True)
 
-# --- Sidebar navigation ---
+# ----------------- SIDEBAR -----------------
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("", ["Accueil", "Formulation", "Références", "Validation"], index=0)
 
-# -------------------------
-#  PAGE : ACCUEIL
-# -------------------------
+# ----------------- ACCUEIL -----------------
 if page == "Accueil":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Bienvenue</div>', unsafe_allow_html=True)
     st.markdown('<div class="muted">Optimisation de la composition est recommandée pour améliorer stabilité et efficacité.</div>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# -------------------------
-#  PAGE : FORMULATION
-# -------------------------
+# ----------------- FORMULATION -----------------
 elif page == "Formulation":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Formulation du produit</div>', unsafe_allow_html=True)
@@ -104,84 +95,69 @@ elif page == "Formulation":
     eps = st.number_input("Quantité d'EPS (%)", min_value=0.0, max_value=100.0, value=2.0)
     lacto = st.number_input("Quantité de Lactobacillus (%)", min_value=0.0, max_value=100.0, value=1.0)
 
-    # Initialisation des métabolites
+    # Métabolites dynamiques
     if 'metabolites' not in st.session_state:
-        st.session_state.metabolites = [{"nom": "", "pourcentage": 0.0} for _ in range(3)]  # 3 lignes par défaut
+        st.session_state.metabolites = []
 
-    st.markdown("**Métabolites :**")
+    st.markdown("**Métabolites ajoutés :**")
     to_delete = None
-    for i, meta in enumerate(st.session_state.metabolites.copy()):
+    for idx, meta in enumerate(st.session_state.metabolites):
         cols = st.columns([3,2,1])
         with cols[0]:
-            meta['nom'] = st.text_input(f"Nom du métabolite {i+1}", value=meta['nom'], key=f"meta_nom_{i}")
+            meta['nom'] = st.text_input(f"Nom du métabolite {idx+1}", value=meta['nom'], key=f"meta_nom_{meta['id']}")
         with cols[1]:
-            meta['pourcentage'] = st.number_input(f"Pourcentage {i+1} (%)", value=meta['pourcentage'], min_value=0.0, max_value=100.0, key=f"meta_pct_{i}")
+            meta['pourcentage'] = st.number_input(f"Pourcentage {idx+1} (%)", value=meta['pourcentage'], min_value=0.0, max_value=100.0, key=f"meta_pct_{meta['id']}")
         with cols[2]:
-            if st.button("Supprimer", key=f"del_meta_{i}"):
-                to_delete = i
-    # Suppression sécurisée après boucle
+            if st.button("Supprimer", key=f"del_meta_{meta['id']}"):
+                to_delete = idx
+
     if to_delete is not None:
         st.session_state.metabolites.pop(to_delete)
         st.experimental_rerun()
 
-    if st.button("Ajouter une ligne"):
-        st.session_state.metabolites.append({"nom": "", "pourcentage": 0.0})
+    if st.button("Ajouter un métabolite"):
+        st.session_state.metabolites.append({"id": str(uuid.uuid4()), "nom": "", "pourcentage":0.0})
         st.experimental_rerun()
 
     # Calcul du score simple
     if st.button("Calculer score"):
         score = int(miel*0.5 + pla*0.2 + eps*0.2 + lacto*0.1)
-        def interpretation_score(score):
-            if score < 15:
-                return ("Score faible — optimisation recommandée.", "#415A77", "score-poor")
-            elif 15 <= score < 30:
-                return ("Score satisfaisant — tests supplémentaires recommandés.", "#1B263B", "score-good")
-            else:
-                return ("Score excellent — formulation équilibrée.", "#0D1B2A", "score-excellent")
-        message, hex_color, css_class = interpretation_score(score)
+        if score < 15:
+            message, css_class = "Score faible — optimisation recommandée.", "score-poor"
+        elif score < 30:
+            message, css_class = "Score satisfaisant — tests supplémentaires recommandés.", "score-good"
+        else:
+            message, css_class = "Score excellent — formulation équilibrée.", "score-excellent"
 
         st.markdown(
             f"""
-            <div class="score-card {css_class}" style="background-color:{hex_color};">
+            <div class="score-card {css_class}">
               <div class="score-title">Résultat de l'analyse in silico</div>
               <div class="score-value">Score : {score}</div>
               <div class="score-text">{html.escape(message)}</div>
             </div>
-            """,
-            unsafe_allow_html=True
+            """, unsafe_allow_html=True
         )
 
         # Sauvegarde CSV
         out_dir = "resultats"
-        try:
-            os.makedirs(out_dir, exist_ok=True)
-            base = {
-                "chercheur": chercheur or "anonyme",
-                "miel": miel,
-                "pla": pla,
-                "eps": eps,
-                "lacto": lacto,
-                "score": score
-            }
-            meta_cols = {}
-            for i, meta in enumerate(st.session_state.metabolites, start=1):
-                meta_cols[f"meta_{i}_nom"] = meta.get("nom", "")
-                meta_cols[f"meta_{i}_pourcentage"] = meta.get("pourcentage", 0.0)
-            row = {**base, **meta_cols}
-            df = pd.DataFrame([row])
-            safe_name = (chercheur or "anonyme").strip().replace(" ", "_").replace("/", "_")
-            path = os.path.join(out_dir, f"formulation_{safe_name}.csv")
-            df.to_csv(path, index=False)
-            st.success("Rapport sauvegardé avec succès.")
-            st.info(f"Chemin : {path}")
-        except Exception as e:
-            st.error(f"Erreur lors de la sauvegarde du rapport : {e}")
+        os.makedirs(out_dir, exist_ok=True)
+        base = {"chercheur": chercheur or "anonyme","miel": miel,"pla": pla,"eps": eps,"lacto": lacto,"score": score}
+        meta_cols = {}
+        for i, meta in enumerate(st.session_state.metabolites, start=1):
+            meta_cols[f"meta_{i}_nom"] = meta['nom']
+            meta_cols[f"meta_{i}_pourcentage"] = meta['pourcentage']
+        row = {**base, **meta_cols}
+        df = pd.DataFrame([row])
+        safe_name = (chercheur or "anonyme").strip().replace(" ", "_").replace("/", "_")
+        path = os.path.join(out_dir, f"formulation_{safe_name}.csv")
+        df.to_csv(path, index=False)
+        st.success("Rapport sauvegardé avec succès.")
+        st.info(f"Chemin : {path}")
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-# -------------------------
-#  PAGE : RÉFÉRENCES
-# -------------------------
+# ----------------- RÉFÉRENCES -----------------
 elif page == "Références":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Références scientifiques</div>', unsafe_allow_html=True)
@@ -217,7 +193,7 @@ elif page == "Références":
                     st.markdown(display + extra, unsafe_allow_html=True)
             else:
                 st.info("Aucun article PubMed trouvé pour ce terme.")
-        except Exception as e:
+        except Exception:
             st.error("Recherche PubMed impossible (vérifiez la connexion).")
 
         # UniProt
@@ -239,7 +215,7 @@ elif page == "Références":
                     st.markdown(f"- <a href='{uniprot_url}' target='_blank' style='color:#0A84FF;text-decoration:none'><b>{html.escape(display_label)}</b></a> — Accession: `{acc}`", unsafe_allow_html=True)
             else:
                 st.info("Aucun hit UniProt retourné.")
-        except Exception as e:
+        except Exception:
             st.error("Recherche UniProt impossible (temps de réponse ou réseau).")
 
         # PDB
@@ -252,24 +228,18 @@ elif page == "Références":
         except Exception:
             st.info("Impossible de générer le lien RCSB.")
 
-# -------------------------
-#  PAGE : VALIDATION
-# -------------------------
+# ----------------- VALIDATION -----------------
 elif page == "Validation":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Validation in silico</div>', unsafe_allow_html=True)
     st.markdown('<div class="muted">Visualisation et score de stabilité</div>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    df = pd.DataFrame({
-        "Composant":["Miel","PLA","EPS","Lactobacillus"],
-        "Contribution":[40,1,2,1]
-    })
+    # Graphe dynamique incluant tous les métabolites ajoutés
+    composants = ["Miel","PLA","EPS","Lactobacillus"] + [m['nom'] for m in st.session_state.get("metabolites",[])]
+    contributions = [40,1,2,1] + [m['pourcentage'] for m in st.session_state.get("metabolites",[])]
+    df = pd.DataFrame({"Composant":composants,"Contribution":contributions})
     st.bar_chart(df.set_index("Composant"))
-
-
-
-
 
 
 
