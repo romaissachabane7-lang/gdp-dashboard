@@ -109,7 +109,8 @@ elif page == "Formulation":
         st.session_state.metabolites = [{"nom": "", "pourcentage": 0.0} for _ in range(3)]  # 3 lignes par défaut
 
     st.markdown("**Métabolites :**")
-    for i, meta in enumerate(st.session_state.metabolites):
+    to_delete = None
+    for i, meta in enumerate(st.session_state.metabolites.copy()):
         cols = st.columns([3,2,1])
         with cols[0]:
             meta['nom'] = st.text_input(f"Nom du métabolite {i+1}", value=meta['nom'], key=f"meta_nom_{i}")
@@ -117,8 +118,11 @@ elif page == "Formulation":
             meta['pourcentage'] = st.number_input(f"Pourcentage {i+1} (%)", value=meta['pourcentage'], min_value=0.0, max_value=100.0, key=f"meta_pct_{i}")
         with cols[2]:
             if st.button("Supprimer", key=f"del_meta_{i}"):
-                st.session_state.metabolites.pop(i)
-                st.experimental_rerun()
+                to_delete = i
+    # Suppression sécurisée après boucle
+    if to_delete is not None:
+        st.session_state.metabolites.pop(to_delete)
+        st.experimental_rerun()
 
     if st.button("Ajouter une ligne"):
         st.session_state.metabolites.append({"nom": "", "pourcentage": 0.0})
@@ -262,6 +266,8 @@ elif page == "Validation":
         "Contribution":[40,1,2,1]
     })
     st.bar_chart(df.set_index("Composant"))
+
+
 
 
 
