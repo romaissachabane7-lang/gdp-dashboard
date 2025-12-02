@@ -105,25 +105,25 @@ elif page == "Formulation":
     eps = st.number_input("Quantité d'EPS (%)", min_value=0.0, max_value=100.0, value=2.0)
     lacto = st.number_input("Quantité de Lactobacillus (%)", min_value=0.0, max_value=100.0, value=1.0)
 
-    # Entrées des métabolites
+    # Initialisation métabolites
     if 'metabolites' not in st.session_state:
         st.session_state.metabolites = []
 
-    # Affichage et modification des métabolites existants
-    to_delete = None
+    # Affichage et modification des métabolites
+    to_delete_id = None
     for meta in st.session_state.metabolites:
-        cols = st.columns([3,2,1])
+        cols = st.columns([3, 2, 1])
         with cols[0]:
-            meta['nom'] = st.text_input("Nom du métabolite", value=meta.get('nom',''), key=f"nom_{meta['id']}")
+            meta['nom'] = st.text_input("Nom du métabolite", value=meta.get('nom', ''), key=f"nom_{meta['id']}")
         with cols[1]:
-            meta['pourcentage'] = st.number_input("Pourcentage (%)", value=meta.get('pourcentage',0.0), min_value=0.0, max_value=100.0, key=f"pct_{meta['id']}")
+            meta['pourcentage'] = st.number_input("Pourcentage (%)", value=meta.get('pourcentage', 0.0), min_value=0.0, max_value=100.0, key=f"pct_{meta['id']}")
         with cols[2]:
             if st.button("Supprimer", key=f"del_{meta['id']}"):
-                to_delete = meta['id']
+                to_delete_id = meta['id']
 
     # Supprimer en dehors de la boucle
-    if to_delete is not None:
-        st.session_state.metabolites = [m for m in st.session_state.metabolites if m['id'] != to_delete]
+    if to_delete_id is not None:
+        st.session_state.metabolites = [m for m in st.session_state.metabolites if m['id'] != to_delete_id]
         st.experimental_rerun()
 
     # Ajouter un nouveau métabolite
@@ -133,7 +133,6 @@ elif page == "Formulation":
         if st.button("Ajouter le métabolite", key="add_meta"):
             if new_nom:
                 st.session_state.metabolites.append({"id": str(uuid.uuid4()), "nom": new_nom, "pourcentage": new_pct})
-                st.success(f"{new_nom} ajouté à la formulation")
                 st.experimental_rerun()
             else:
                 st.warning("Nom du métabolite requis !")
@@ -141,6 +140,8 @@ elif page == "Formulation":
     # Calcul du score simple
     if st.button("Calculer score"):
         score = int(miel*0.5 + pla*0.2 + eps*0.2 + lacto*0.1)
+        for m in st.session_state.metabolites:
+            score += int(m.get('pourcentage', 0) * 0.05)  # exemple d'ajout des métabolites au score
         def interpretation_score(score):
             if score < 15:
                 return ("Score faible — optimisation recommandée.", "#415A77", "score-poor")
@@ -272,8 +273,8 @@ elif page == "Validation":
     st.markdown("</div>", unsafe_allow_html=True)
 
     df = pd.DataFrame({
-        "Composant":["Miel","PLA","EPS","Lactobacillus"] + [m["nom"] for m in st.session_state.get("metabolites", [])],
-        "Contribution":[40,1,2,1] + [m["pourcentage"] for m in st.session_state.get("metabolites", [])]
+        "Composant":["Miel","PLA","EPS","Lactobacillus"],
+        "Contribution":[40,1,2,1]
     })
     st.bar_chart(df.set_index("Composant"))
 
