@@ -8,7 +8,7 @@ import urllib.parse
 # CONFIG
 st.set_page_config(page_title="BioPlateforme Algérienne", layout="wide")
 
-# --- SVG logo (honey + bacteria motif) ---
+# --- SVG logo ---
 svg_logo = """
 <div style="display:flex;align-items:center;">
   <div style="width:90px;height:90px;background:linear-gradient(180deg,#f3d886,#d8b05a);border-radius:18px;
@@ -36,31 +36,28 @@ svg_logo = """
 """
 
 # --- Global CSS ---
-st.markdown(
-    """
-    <style>
-    .stApp { background-color: #fbf7ee; }
-    .topbar { padding: 0; margin-bottom: 14px; }
-    .card { background-color: #fffaf0; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 18px; }
-    .nav-button { background-color: transparent; border: none; font-weight:600; color: #3b2f1f; padding: 8px 14px; border-radius:6px; }
-    .nav-button:hover { background-color: #efe2b3; }
-    .section-title { color:#4a3f2a; font-weight:700; font-size:20px; margin-bottom:10px; }
-    .muted { color:#7a6b5a; font-size:13px; }
+st.markdown("""
+<style>
+.stApp { background-color: #fbf7ee; }
+.topbar { padding: 0; margin-bottom: 14px; }
+.card { background-color: #fffaf0; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 18px; }
+.nav-button { background-color: transparent; border: none; font-weight:600; color: #3b2f1f; padding: 8px 14px; border-radius:6px; }
+.nav-button:hover { background-color: #efe2b3; }
+.section-title { color:#4a3f2a; font-weight:700; font-size:20px; margin-bottom:10px; }
+.muted { color:#7a6b5a; font-size:13px; }
 
-    .score-card { padding:20px; border-radius:12px; color: #ffffff; box-shadow: 0 6px 20px rgba(13,27,42,0.12); margin-top:12px; border: 1px solid rgba(255,255,255,0.06); max-width: 720px; }
-    .score-excellent { background: linear-gradient(180deg, #0D1B2A 0%, #102232 100%); }
-    .score-good      { background: linear-gradient(180deg, #1B263B 0%, #243447 100%); }
-    .score-poor      { background: linear-gradient(180deg, #415A77 0%, #546E8C 100%); }
+.score-card { padding:20px; border-radius:12px; color: #ffffff; box-shadow: 0 6px 20px rgba(13,27,42,0.12); margin-top:12px; border: 1px solid rgba(255,255,255,0.06); max-width: 720px; }
+.score-excellent { background: linear-gradient(180deg, #0D1B2A 0%, #102232 100%); }
+.score-good      { background: linear-gradient(180deg, #1B263B 0%, #243447 100%); }
+.score-poor      { background: linear-gradient(180deg, #415A77 0%, #546E8C 100%); }
 
-    .score-title { font-size:16px; opacity:0.95; margin-bottom:8px; }
-    .score-value { font-size:28px; font-weight:700; margin-top:6px; }
-    .score-text { font-size:15px; opacity:0.95; margin-top:8px; line-height:1.4; }
+.score-title { font-size:16px; opacity:0.95; margin-bottom:8px; }
+.score-value { font-size:28px; font-weight:700; margin-top:6px; }
+.score-text { font-size:15px; opacity:0.95; margin-top:8px; line-height:1.4; }
 
-    .meta-input { margin-bottom:6px; }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+.meta-input { margin-bottom:6px; }
+</style>
+""", unsafe_allow_html=True)
 
 # --- Header ---
 st.markdown("<div class='topbar'></div>", unsafe_allow_html=True)
@@ -82,7 +79,7 @@ st.sidebar.title("Navigation")
 page = st.sidebar.radio("", ["Accueil", "Formulation", "Références", "Validation"], index=0)
 
 # -------------------------
-#  PAGE : ACCUEIL
+# PAGE : ACCUEIL
 # -------------------------
 if page == "Accueil":
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -91,7 +88,7 @@ if page == "Accueil":
     st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------------
-#  PAGE : FORMULATION
+# PAGE : FORMULATION
 # -------------------------
 elif page == "Formulation":
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -104,18 +101,32 @@ elif page == "Formulation":
     eps = st.number_input("Quantité d'EPS (%)", min_value=0.0, max_value=100.0, value=2.0)
     lacto = st.number_input("Quantité de Lactobacillus (%)", min_value=0.0, max_value=100.0, value=1.0)
 
-    # Entrées des métabolites
+    # Stockage des métabolites
     if 'metabolites' not in st.session_state:
         st.session_state.metabolites = []
 
+    # Ajouter un métabolite
     with st.expander("Ajouter un métabolite"):
-        nom = st.text_input("Nom du métabolite", key="meta_nom")
-        pourcentage = st.number_input("Pourcentage (%)", min_value=0.0, max_value=100.0, key="meta_pct")
-        if st.button("Ajouter le métabolite"):
-            st.session_state.metabolites.append({"nom": nom, "pourcentage": pourcentage})
-            st.success(f"{nom} ajouté à la formulation")
+        col1, col2, col3 = st.columns([3, 2, 1])
+        with col1:
+            meta_nom = st.text_input("Nom du métabolite", key="meta_nom_input")
+        with col2:
+            meta_pct = st.number_input("Pourcentage (%)", min_value=0.0, max_value=100.0, key="meta_pct_input")
+        with col3:
+            if st.button("Ajouter", key="btn_add_meta"):
+                if meta_nom.strip() != "":
+                    st.session_state.metabolites.append({"nom": meta_nom.strip(), "pourcentage": meta_pct})
+                    st.success(f"{meta_nom.strip()} ajouté à la formulation")
+                else:
+                    st.warning("Nom du métabolite vide")
 
-    # Calcul du score simple
+    # Affichage des métabolites
+    if st.session_state.metabolites:
+        st.markdown("**Métabolites ajoutés :**")
+        for i, m in enumerate(st.session_state.metabolites, start=1):
+            st.markdown(f"{i}. {m['nom']} — {m['pourcentage']}%")
+
+    # Calcul du score
     if st.button("Calculer score"):
         score = int(miel*0.5 + pla*0.2 + eps*0.2 + lacto*0.1)
         def interpretation_score(score):
@@ -167,7 +178,7 @@ elif page == "Formulation":
     st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------------
-#  PAGE : RÉFÉRENCES
+# PAGE : RÉFÉRENCES
 # -------------------------
 elif page == "Références":
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -240,7 +251,7 @@ elif page == "Références":
             st.info("Impossible de générer le lien RCSB.")
 
 # -------------------------
-#  PAGE : VALIDATION
+# PAGE : VALIDATION
 # -------------------------
 elif page == "Validation":
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -248,11 +259,13 @@ elif page == "Validation":
     st.markdown('<div class="muted">Visualisation et score de stabilité</div>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
+    # Exemple d'affichage des contributions
     df = pd.DataFrame({
-        "Composant":["Miel","PLA","EPS","Lactobacillus"],
-        "Contribution":[40,1,2,1]
+        "Composant": ["Miel","PLA","EPS","Lactobacillus"] + [m['nom'] for m in st.session_state.get('metabolites', [])],
+        "Contribution": [40,1,2,1] + [m['pourcentage'] for m in st.session_state.get('metabolites', [])]
     })
     st.bar_chart(df.set_index("Composant"))
+
 
 
 
