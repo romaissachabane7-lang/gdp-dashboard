@@ -37,25 +37,31 @@ svg_logo = """
 """
 
 # ----------------- CSS GLOBAL -----------------
-st.markdown("""
-<style>
-.stApp { background-color: #fbf7ee; }
-.topbar { padding: 0; margin-bottom: 14px; }
-.card { background-color: #fffaf0; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 18px; }
-.nav-button { background-color: transparent; border: none; font-weight:600; color: #3b2f1f; padding: 8px 14px; border-radius:6px; }
-.nav-button:hover { background-color: #efe2b3; }
-.section-title { color:#4a3f2a; font-weight:700; font-size:20px; margin-bottom:10px; }
-.muted { color:#7a6b5a; font-size:13px; }
-.score-card { padding:20px; border-radius:12px; color: #ffffff; box-shadow: 0 6px 20px rgba(13,27,42,0.12); margin-top:12px; border: 1px solid rgba(255,255,255,0.06); max-width: 720px; }
-.score-excellent { background: linear-gradient(180deg, #0D1B2A 0%, #102232 100%); }
-.score-good { background: linear-gradient(180deg, #1B263B 0%, #243447 100%); }
-.score-poor { background: linear-gradient(180deg, #415A77 0%, #546E8C 100%); }
-.score-title { font-size:16px; opacity:0.95; margin-bottom:8px; }
-.score-value { font-size:28px; font-weight:700; margin-top:6px; }
-.score-text { font-size:15px; opacity:0.95; margin-top:8px; line-height:1.4; }
-.meta-input { margin-bottom:6px; }
-</style>
-""", unsafe_allow_html=True)
+st.markdown(
+    """
+    <style>
+    .stApp { background-color: #fbf7ee; }
+    .topbar { padding: 0; margin-bottom: 14px; }
+    .card { background-color: #fffaf0; border-radius: 10px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); margin-bottom: 18px; }
+    .nav-button { background-color: transparent; border: none; font-weight:600; color: #3b2f1f; padding: 8px 14px; border-radius:6px; }
+    .nav-button:hover { background-color: #efe2b3; }
+    .section-title { color:#4a3f2a; font-weight:700; font-size:20px; margin-bottom:10px; }
+    .muted { color:#7a6b5a; font-size:13px; }
+
+    .score-card { padding:20px; border-radius:12px; color: #ffffff; box-shadow: 0 6px 20px rgba(13,27,42,0.12); margin-top:12px; border: 1px solid rgba(255,255,255,0.06); max-width: 720px; }
+    .score-excellent { background: linear-gradient(180deg, #0D1B2A 0%, #102232 100%); }
+    .score-good      { background: linear-gradient(180deg, #1B263B 0%, #243447 100%); }
+    .score-poor      { background: linear-gradient(180deg, #415A77 0%, #546E8C 100%); }
+
+    .score-title { font-size:16px; opacity:0.95; margin-bottom:8px; }
+    .score-value { font-size:28px; font-weight:700; margin-top:6px; }
+    .score-text { font-size:15px; opacity:0.95; margin-top:8px; line-height:1.4; }
+
+    .meta-input { margin-bottom:6px; }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 # ----------------- HEADER -----------------
 st.markdown("<div class='topbar'></div>", unsafe_allow_html=True)
@@ -76,14 +82,18 @@ with col2:
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("", ["Accueil", "Formulation", "Références", "Validation"], index=0)
 
-# ----------------- ACCUEIL -----------------
+# ----------------- INITIALISATION METABOLITES -----------------
+if 'metabolites' not in st.session_state:
+    st.session_state.metabolites = []
+
+# ----------------- PAGE ACCUEIL -----------------
 if page == "Accueil":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Bienvenue</div>', unsafe_allow_html=True)
     st.markdown('<div class="muted">Optimisation de la composition est recommandée pour améliorer stabilité et efficacité.</div>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ----------------- FORMULATION -----------------
+# ----------------- PAGE FORMULATION -----------------
 elif page == "Formulation":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Formulation du produit</div>', unsafe_allow_html=True)
@@ -95,26 +105,25 @@ elif page == "Formulation":
     eps = st.number_input("Quantité d'EPS (%)", min_value=0.0, max_value=100.0, value=2.0)
     lacto = st.number_input("Quantité de Lactobacillus (%)", min_value=0.0, max_value=100.0, value=1.0)
 
-    # Métabolites dynamiques
-    if 'metabolites' not in st.session_state:
-        st.session_state.metabolites = []
-
+    # Affichage et modification des métabolites
     st.markdown("**Métabolites ajoutés :**")
     to_delete = None
-    for idx, meta in enumerate(st.session_state.metabolites):
+    for meta in st.session_state.metabolites:
         cols = st.columns([3,2,1])
         with cols[0]:
-            meta['nom'] = st.text_input(f"Nom du métabolite {idx+1}", value=meta['nom'], key=f"meta_nom_{meta['id']}")
+            meta['nom'] = st.text_input("Nom du métabolite", value=meta['nom'], key=f"nom_{meta['id']}")
         with cols[1]:
-            meta['pourcentage'] = st.number_input(f"Pourcentage {idx+1} (%)", value=meta['pourcentage'], min_value=0.0, max_value=100.0, key=f"meta_pct_{meta['id']}")
+            meta['pourcentage'] = st.number_input("Pourcentage (%)", value=meta['pourcentage'], min_value=0.0, max_value=100.0, key=f"pct_{meta['id']}")
         with cols[2]:
-            if st.button("Supprimer", key=f"del_meta_{meta['id']}"):
-                to_delete = idx
+            if st.button("Supprimer", key=f"del_{meta['id']}"):
+                to_delete = meta['id']
 
-    if to_delete is not None:
-        st.session_state.metabolites.pop(to_delete)
+    # Supprimer sans erreur
+    if to_delete:
+        st.session_state.metabolites = [m for m in st.session_state.metabolites if m['id'] != to_delete]
         st.experimental_rerun()
 
+    # Ajouter un métabolite
     if st.button("Ajouter un métabolite"):
         st.session_state.metabolites.append({"id": str(uuid.uuid4()), "nom": "", "pourcentage":0.0})
         st.experimental_rerun()
@@ -145,8 +154,8 @@ elif page == "Formulation":
         base = {"chercheur": chercheur or "anonyme","miel": miel,"pla": pla,"eps": eps,"lacto": lacto,"score": score}
         meta_cols = {}
         for i, meta in enumerate(st.session_state.metabolites, start=1):
-            meta_cols[f"meta_{i}_nom"] = meta['nom']
-            meta_cols[f"meta_{i}_pourcentage"] = meta['pourcentage']
+            meta_cols[f"meta_{i}_nom"] = meta.get("nom","")
+            meta_cols[f"meta_{i}_pourcentage"] = meta.get("pourcentage",0.0)
         row = {**base, **meta_cols}
         df = pd.DataFrame([row])
         safe_name = (chercheur or "anonyme").strip().replace(" ", "_").replace("/", "_")
@@ -157,7 +166,7 @@ elif page == "Formulation":
 
     st.markdown("</div>", unsafe_allow_html=True)
 
-# ----------------- RÉFÉRENCES -----------------
+# ----------------- PAGE REFERENCES -----------------
 elif page == "Références":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Références scientifiques</div>', unsafe_allow_html=True)
@@ -193,7 +202,7 @@ elif page == "Références":
                     st.markdown(display + extra, unsafe_allow_html=True)
             else:
                 st.info("Aucun article PubMed trouvé pour ce terme.")
-        except Exception:
+        except:
             st.error("Recherche PubMed impossible (vérifiez la connexion).")
 
         # UniProt
@@ -215,7 +224,7 @@ elif page == "Références":
                     st.markdown(f"- <a href='{uniprot_url}' target='_blank' style='color:#0A84FF;text-decoration:none'><b>{html.escape(display_label)}</b></a> — Accession: `{acc}`", unsafe_allow_html=True)
             else:
                 st.info("Aucun hit UniProt retourné.")
-        except Exception:
+        except:
             st.error("Recherche UniProt impossible (temps de réponse ou réseau).")
 
         # PDB
@@ -225,22 +234,21 @@ elif page == "Références":
             rcsb_link = f"https://www.rcsb.org/search?request={{\"query\":\"{query_encoded}\"}}"
             st.markdown(f"- Effectuer une recherche sur RCSB PDB : <a href='{rcsb_link}' target='_blank' style='color:#0A84FF;text-decoration:none'>Ouvrir RCSB</a>", unsafe_allow_html=True)
             st.markdown("<div style='margin-top:6px' class='muted'>Astuce : utilisez l'accession UniProt (si trouvée ci-dessus) pour retrouver des structures corrélées.</div>", unsafe_allow_html=True)
-        except Exception:
+        except:
             st.info("Impossible de générer le lien RCSB.")
 
-# ----------------- VALIDATION -----------------
+# ----------------- PAGE VALIDATION -----------------
 elif page == "Validation":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Validation in silico</div>', unsafe_allow_html=True)
     st.markdown('<div class="muted">Visualisation et score de stabilité</div>', unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # Graphe dynamique incluant tous les métabolites ajoutés
-    composants = ["Miel","PLA","EPS","Lactobacillus"] + [m['nom'] for m in st.session_state.get("metabolites",[])]
-    contributions = [40,1,2,1] + [m['pourcentage'] for m in st.session_state.get("metabolites",[])]
-    df = pd.DataFrame({"Composant":composants,"Contribution":contributions})
+    df = pd.DataFrame({
+        "Composant":["Miel","PLA","EPS","Lactobacillus"] + [m['nom'] for m in st.session_state.metabolites],
+        "Contribution":[40,1,2,1] + [m['pourcentage'] for m in st.session_state.metabolites]
+    })
     st.bar_chart(df.set_index("Composant"))
-
 
 
 
