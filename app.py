@@ -105,28 +105,24 @@ elif page == "Formulation":
     eps = st.number_input("Quantité d'EPS (%)", min_value=0.0, max_value=100.0, value=2.0)
     lacto = st.number_input("Quantité de Lactobacillus (%)", min_value=0.0, max_value=100.0, value=1.0)
 
-    # Initialisation des métabolites
+    # Entrées des métabolites
     if 'metabolites' not in st.session_state:
         st.session_state.metabolites = []
-
-    # Assurer que tous les métabolites existants ont un ID unique
-    for meta in st.session_state.metabolites:
-        if 'id' not in meta:
-            meta['id'] = str(uuid.uuid4())
 
     # Affichage et modification des métabolites existants
     to_delete = None
     for meta in st.session_state.metabolites:
         cols = st.columns([3,2,1])
         with cols[0]:
-            meta['nom'] = st.text_input("Nom du métabolite", value=meta['nom'], key=f"nom_{meta['id']}")
+            meta['nom'] = st.text_input("Nom du métabolite", value=meta.get('nom',''), key=f"nom_{meta['id']}")
         with cols[1]:
-            meta['pourcentage'] = st.number_input("Pourcentage (%)", value=meta['pourcentage'], min_value=0.0, max_value=100.0, key=f"pct_{meta['id']}")
+            meta['pourcentage'] = st.number_input("Pourcentage (%)", value=meta.get('pourcentage',0.0), min_value=0.0, max_value=100.0, key=f"pct_{meta['id']}")
         with cols[2]:
             if st.button("Supprimer", key=f"del_{meta['id']}"):
                 to_delete = meta['id']
 
-    if to_delete:
+    # Supprimer en dehors de la boucle
+    if to_delete is not None:
         st.session_state.metabolites = [m for m in st.session_state.metabolites if m['id'] != to_delete]
         st.experimental_rerun()
 
@@ -276,11 +272,10 @@ elif page == "Validation":
     st.markdown("</div>", unsafe_allow_html=True)
 
     df = pd.DataFrame({
-        "Composant":["Miel","PLA","EPS","Lactobacillus"],
-        "Contribution":[40,1,2,1]
+        "Composant":["Miel","PLA","EPS","Lactobacillus"] + [m["nom"] for m in st.session_state.get("metabolites", [])],
+        "Contribution":[40,1,2,1] + [m["pourcentage"] for m in st.session_state.get("metabolites", [])]
     })
     st.bar_chart(df.set_index("Composant"))
-
 
 
 
