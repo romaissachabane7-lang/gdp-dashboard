@@ -87,10 +87,83 @@ page = st.sidebar.radio("", ["Accueil", "Formulation", "Références", "Validati
 if page == "Accueil":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown('<div class="section-title">Bienvenue</div>', unsafe_allow_html=True)
-    st.markdown(
-        "Optimisation de la composition est recommandée pour améliorer stabilité et efficacité.",
-        unsafe_allow_html=True,
-    )
+    st.markdown('<div class="muted">Optimisation de la composition est recommandée pour améliorer stabilité et efficacité.</div>', unsafe_allow_html=True)
+    st.markdown("</div>", unsafe_allow_html=True)
+
+# -------------------------
+#  PAGE : FORMULATION
+# -------------------------
+elif page == "Formulation":
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+    st.markdown('<div class="section-title">Formulation du produit</div>', unsafe_allow_html=True)
+
+    # Entrées de base
+    chercheur = st.text_input("Nom du chercheur")
+    miel = st.number_input("Quantité de miel (%)", min_value=0.0, max_value=100.0, value=40.0)
+    pla = st.number_input("Quantité de PLA (%)", min_value=0.0, max_value=100.0, value=1.0)
+    eps = st.number_input("Quantité d'EPS (%)", min_value=0.0, max_value=100.0, value=2.0)
+    lacto = st.number_input("Quantité de Lactobacillus (%)", min_value=0.0, max_value=100.0, value=1.0)
+
+    # Entrées des métabolites
+    if 'metabolites' not in st.session_state:
+        st.session_state.metabolites = []
+
+    with st.expander("Ajouter un métabolite"):
+        nom = st.text_input("Nom du métabolite", key="meta_nom")
+        pourcentage = st.number_input("Pourcentage (%)", min_value=0.0, max_value=100.0, key="meta_pct")
+        if st.button("Ajouter le métabolite"):
+            st.session_state.metabolites.append({"nom": nom, "pourcentage": pourcentage})
+            st.success(f"{nom} ajouté à la formulation")
+
+    # Calcul du score simple
+    if st.button("Calculer score"):
+        score = int(miel*0.5 + pla*0.2 + eps*0.2 + lacto*0.1)
+        def interpretation_score(score):
+            if score < 15:
+                return ("Score faible — optimisation recommandée.", "#415A77", "score-poor")
+            elif 15 <= score < 30:
+                return ("Score satisfaisant — tests supplémentaires recommandés.", "#1B263B", "score-good")
+            else:
+                return ("Score excellent — formulation équilibrée.", "#0D1B2A", "score-excellent")
+        message, hex_color, css_class = interpretation_score(score)
+
+        st.markdown(
+            f"""
+            <div class="score-card {css_class}" style="background-color:{hex_color};">
+              <div class="score-title">Résultat de l'analyse in silico</div>
+              <div class="score-value">Score : {score}</div>
+              <div class="score-text">{html.escape(message)}</div>
+            </div>
+            """,
+            unsafe_allow_html=True
+        )
+
+        # Sauvegarde CSV
+        out_dir = "resultats"
+        try:
+            os.makedirs(out_dir, exist_ok=True)
+            base = {
+                "chercheur": chercheur or "anonyme",
+                "miel": miel,
+                "pla": pla,
+                "eps": eps,
+                "lacto": lacto,
+                "score": score
+            }
+            meta_cols = {}
+            for i, meta in enumerate(st.session_state.metabolites, start=1):
+                meta_cols[f"meta_{i}_nom"] = meta.get("nom", "")
+                meta_cols[f"meta_{i}_pourcentage"] = meta.get("pourcentage", 0.0)
+            row = {**base, **meta_cols}
+            df = pd.DataFrame([row])
+            safe_name = (chercheur or "anonyme").strip().replace(" ", "_").replace("/", "_")
+            path = os.path.join(out_dir, f"formulation_{safe_name}.csv")
+            df.to_csv(path, index=False)
+            st.success("Rapport sauvegardé avec succès.")
+            st.info(f"Chemin : {path}")
+        except Exception as e:
+            st.error(f"Erreur lors de la sauvegarde du rapport : {e}")
+
     st.markdown("</div>", unsafe_allow_html=True)
 
 # -------------------------
@@ -103,7 +176,6 @@ elif page == "Références":
     st.markdown("</div>", unsafe_allow_html=True)
 
     terme = st.text_input("Rechercher (ex: Lactobacillus plantarum OR phenyllactic acid OR plantaricin)")
-
     if terme:
         st.markdown(f"**Résultats pour :** {html.escape(terme)}")
         st.markdown("Affichage professionnel — les résultats incluent titre, date et lien direct lorsque disponible.")
@@ -116,28 +188,22 @@ elif page == "Références":
             r = requests.get(esearch_url, params=params, timeout=10)
             r.raise_for_status()
             ids = r.json().get("esearchresult", {}).get("idlist", [])
-
             if ids:
                 esummary_url = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
                 s = requests.get(esummary_url, params={"db":"pubmed","id":",".join(ids),"retmode":"json"}, timeout=10)
                 s.raise_for_status()
                 summaries = s.json().get("result", {})
-
                 for pid in ids:
                     info = summaries.get(pid, {})
                     title = info.get("title") or f"PubMed {pid}"
                     pubdate = info.get("pubdate", "")
                     source = info.get("source", "")
                     pubmed_url = f"https://pubmed.ncbi.nlm.nih.gov/{pid}/"
-
                     display = f"- <b><a href='{pubmed_url}' target='_blank' style='color:#0A84FF;text-decoration:none'>{html.escape(title)}</a></b>"
                     extra = f" — {html.escape(source)} {html.escape(pubdate)}" if source or pubdate else ""
-
                     st.markdown(display + extra, unsafe_allow_html=True)
-
             else:
                 st.info("Aucun article PubMed trouvé pour ce terme.")
-
         except Exception as e:
             st.error("Recherche PubMed impossible (vérifiez la connexion).")
 
@@ -150,22 +216,16 @@ elif page == "Références":
             r2.raise_for_status()
             data = r2.json()
             hits = data.get("results", [])
-
             if hits:
                 for entry in hits:
                     acc = entry.get("primaryAccession")
                     prot_desc = entry.get("proteinDescription", {})
-                    rec_name = prot_desc.get("recommendedName", {}).get("fullName", {}).get("value", "")
+                    rec_name = prot_desc.get("recommendedName", {}).get("fullName", {}).get("value", "") if prot_desc else ""
                     display_label = rec_name or acc
                     uniprot_url = f"https://rest.uniprot.org/uniprotkb/{acc}"
-
-                    st.markdown(
-                        f"- <a href='{uniprot_url}' target='_blank' style='color:#0A84FF;text-decoration:none'><b>{html.escape(display_label)}</b></a> — Accession: `{acc}`",
-                        unsafe_allow_html=True,
-                    )
+                    st.markdown(f"- <a href='{uniprot_url}' target='_blank' style='color:#0A84FF;text-decoration:none'><b>{html.escape(display_label)}</b></a> — Accession: `{acc}`", unsafe_allow_html=True)
             else:
                 st.info("Aucun hit UniProt retourné.")
-
         except Exception as e:
             st.error("Recherche UniProt impossible (temps de réponse ou réseau).")
 
@@ -174,15 +234,8 @@ elif page == "Références":
         try:
             query_encoded = urllib.parse.quote_plus(terme)
             rcsb_link = f"https://www.rcsb.org/search?request={{\"query\":\"{query_encoded}\"}}"
-
-            st.markdown(
-                f"- Effectuer une recherche sur RCSB PDB : <a href='{rcsb_link}' target='_blank' style='color:#0A84FF;text-decoration:none'>Ouvrir RCSB</a>",
-                unsafe_allow_html=True,
-            )
-            st.markdown(
-                "<div style='margin-top:6px' class='muted'>Astuce : utilisez l'accession UniProt (si trouvée ci-dessus) pour retrouver des structures corrélées.</div>",
-                unsafe_allow_html=True,
-            )
+            st.markdown(f"- Effectuer une recherche sur RCSB PDB : <a href='{rcsb_link}' target='_blank' style='color:#0A84FF;text-decoration:none'>Ouvrir RCSB</a>", unsafe_allow_html=True)
+            st.markdown("<div style='margin-top:6px' class='muted'>Astuce : utilisez l'accession UniProt (si trouvée ci-dessus) pour retrouver des structures corrélées.</div>", unsafe_allow_html=True)
         except Exception:
             st.info("Impossible de générer le lien RCSB.")
 
@@ -199,7 +252,6 @@ elif page == "Validation":
         "Composant":["Miel","PLA","EPS","Lactobacillus"],
         "Contribution":[40,1,2,1]
     })
-
     st.bar_chart(df.set_index("Composant"))
 
 
